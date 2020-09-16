@@ -1,9 +1,9 @@
 use std::{
     env,
-    process,
-    thread,
     error::Error,
-    result::Result
+    process,
+    result::Result,
+    thread,
 };
 
 use futures_util::{
@@ -41,7 +41,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let keywords = parse_keywords()?;
     println!("[parsed] {:?}", keywords);
-
 
     println!("[init] ok, listening now");
     while let Some(value) = stream.next().await {
