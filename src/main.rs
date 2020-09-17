@@ -3,6 +3,7 @@ use std::{
     error::Error,
     process,
     result::Result,
+    time::{Duration, Instant},
     thread,
 };
 
@@ -15,7 +16,7 @@ use regex::Regex;
 use signal_hook::{iterator::Signals, SIGTERM, SIGINT, SIGQUIT, SIGHUP};
 use teloxide::prelude::Request;
 
-// https://docs.rs/mr_splashy_pants/0.1.18/src/mr_splashy_pants/api/generated/response/listing/subreddit_new.rs.html
+// https://docs.rs/mr_splashy_pants/0.1.19/src/mr_splashy_pants/api/generated/response/listing/subreddit_new.rs.html
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -23,6 +24,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
     thread::spawn(move || {
         for sig in signals.forever() {
             process::exit(sig);
+        }
+    });
+
+    thread::spawn(move || {
+        let five_minutes = Duration::from_secs(60*5);
+
+        loop {
+            thread::sleep(five_minutes);
+            println!("[heartbeat] {:?}", Instant::now())
         }
     });
 
@@ -44,9 +54,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     println!("[init] ok, listening now");
     while let Some(value) = stream.next().await {
-        if matches_keywords(&keywords, &value.title) {
-            let msg = format!("{}\n{}", value.title, value.url);
-            tg_bot.send_message(chat_id, &msg).send().await?;
+        if let Some(title) = &value.title {
+            if matches_keywords(&keywords, title) {
+                let msg = format!("{}\n{:?}", title, value.url);
+                tg_bot.send_message(chat_id, &msg).send().await?;
+            }
         }
     }
 
