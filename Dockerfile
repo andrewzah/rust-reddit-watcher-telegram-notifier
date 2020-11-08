@@ -1,7 +1,10 @@
-
 FROM rust:1-slim-buster as rust_builder
 
 WORKDIR /build
+
+RUN apt-get update \
+  && apt-get -qq install -y libsqlite3-dev \
+  && rm -rf /var/apt/cache/*
 
 COPY ./Cargo.toml Cargo.toml
 COPY ./src/ ./src/
@@ -19,7 +22,7 @@ RUN cargo build --release \
 FROM debian:stable-slim
 
 RUN apt update \
-  && apt install -y openssl ca-certificates
+  && apt install -y openssl ca-certificates libsqlite3-dev
 
 COPY --from=rust_builder /build/sub_watcher /sub_watcher
 
